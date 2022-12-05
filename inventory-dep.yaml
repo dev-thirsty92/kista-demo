@@ -50,7 +50,73 @@ spec:
     spec:
       containers:
         - name: inventory
-          image: dev-thirsty92/kista-demo
+          image: ---
+apiVersion: v1
+kind: Service
+metadata:
+  name: inventory
+  namespace: user2
+  labels:
+    app: inventory
+spec:
+  ports:
+    - port: 8080
+      targetPort: 8080
+  selector:
+    app: inventory
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mariadb-cm
+  namespace: user2
+data:
+  DB_URL: "jdbc:mysql://mariadb.db:3306/user10"
+  DB_USER: kosta
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: mariadb-sec
+  namespace: user2
+type: Opaque
+data:
+  DB_PASSWD: emh0bXhr
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: inventory
+  namespace: user2
+  labels:
+    app: inventory
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: inventory
+  template:
+    metadata:
+      labels:
+        app: inventory
+    spec:
+      containers:
+        - name: inventory
+          image: hans92/kista-demo
+          envFrom:
+            - configMapRef:
+                name: mariadb-cm
+            - secretRef:
+                name: mariadb-sec
+          resources:
+            requests:
+              memory: "200Mi"
+              cpu: "250m"
+            limits:
+              memory: "500Mi"
+              cpu: "1"
+          ports:
+            - containerPort: 8080
           envFrom:
             - configMapRef:
                 name: mariadb-cm
